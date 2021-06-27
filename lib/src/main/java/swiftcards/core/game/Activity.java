@@ -13,7 +13,7 @@ public interface Activity<T> {
             subject = subj;
         }
 
-        public T get() {
+        public T getSubject() {
             return subject;
         }
     }
