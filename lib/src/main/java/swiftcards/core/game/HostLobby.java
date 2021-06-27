@@ -20,21 +20,26 @@ public class HostLobby implements Lobby {
         gameSettings = settings;
         lobbyType = type;
         gameController = new GameController();
-        gameSettings.setDefaultPlayerConfig(type != LobbyType.ONLINE);
+        gameSettings.setDefaultPlayerConfig(type == LobbyType.ONLINE);
     }
 
-    public static HostLobby createLan(GameSettings settings) {
-        return new HostLobby(LobbyType.LAN, settings);
+    public static HostLobby createLan(GameSettings settings, Class<? extends PlayerPrompter> playerPrompterClass) throws Exception {
+        HostLobby lobby = new HostLobby(LobbyType.LAN, settings);
+
+        lobby.gameController.addPlayer(new HumanPlayer(playerPrompterClass));
+        lobby.gameSettings.players[0] = new GameSettings.PlayerSlot(GameSettings.PlayerSlotStatus.HUMAN);
+
+        return lobby;
     }
 
     public static HostLobby createOnline(GameSettings settings) {
         return new HostLobby(LobbyType.ONLINE, settings);
     }
 
-    public static HostLobby createOffline(GameSettings settings, PlayerPrompter playerPrompter) throws Exception {
+    public static HostLobby createOffline(GameSettings settings, Class<? extends PlayerPrompter> playerPrompterClass) throws Exception {
         HostLobby lobby = new HostLobby(LobbyType.OFFLINE, settings);
-        lobby.gameController.addPlayer(new HumanPlayer(playerPrompter.getClass()));
-        lobby.gameController.addPlayer(new HumanPlayer(playerPrompter.getClass()));
+
+        lobby.gameController.addPlayer(new HumanPlayer(playerPrompterClass));
         lobby.gameSettings.players[0] = new GameSettings.PlayerSlot(GameSettings.PlayerSlotStatus.HUMAN);
 
         return lobby;
