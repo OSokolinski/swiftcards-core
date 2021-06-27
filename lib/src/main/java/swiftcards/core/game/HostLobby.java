@@ -14,7 +14,6 @@ public class HostLobby implements Lobby {
     private GameController gameController;
     private GameSettings gameSettings;
 
-    private ConnectionInterface connectionInterface;
     private Subscriber<Player> onPlayerJoined;
 
     private HostLobby(LobbyType type, GameSettings settings) {
@@ -49,8 +48,7 @@ public class HostLobby implements Lobby {
             onPlayerJoined = new Subscriber<>(gameController::addPlayer);
             NetworkInternalEventBus.getInstance().on(PlayerJoined.class, onPlayerJoined);
 
-            connectionInterface = new ConnectionInterface();
-            connectionInterface.runListener();
+            ConnectionInterface.getInstance().runListener();
         }
     }
 

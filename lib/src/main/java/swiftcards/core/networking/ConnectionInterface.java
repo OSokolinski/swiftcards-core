@@ -15,13 +15,31 @@ public class ConnectionInterface {
     private final ConnectionListeningRunnable listeningRunnable;
 
     private static ConnectionInterface instance;
+
+    private final boolean clientMode;
     
-    public ConnectionInterface() {
+    private ConnectionInterface(boolean asClient) {
         connections = new ArrayList<>();
+        clientMode = asClient;
         listeningRunnable = new ConnectionListeningRunnable(7931);
     }
 
-    public void runListener() {
+    public static void initAsClient(String address, int port) throws IOException {
+        instance = new ConnectionInterface(true);
+
+        ConnectionChannel channel = ConnectionChannel.connect(address, port);
+        instance.connections.add(channel);
+    }
+
+    public static void initAsServer(int port) {
+        instance = new ConnectionInterface(false);
+    }
+
+    public void runListener() throws ConnectionListenerNotAllowedException {
+
+        if (clientMode) {
+            throw new ConnectionListenerNotAllowedException();
+        }
 
         NetworkInternalEventBus.getInstance().on(SocketAccepted.class, new Subscriber<>(
             (Socket s) -> {
@@ -47,9 +65,10 @@ public class ConnectionInterface {
 
     public static ConnectionInterface getInstance() {
 
-        if (instance == null) {
-            instance = new ConnectionInterface();
-        }
+        // TODO consider throwing ConnectionNotConfiguredException
+//        if (instance == null) {
+//            instance = new ConnectionInterface();
+//        }
 
         return instance;
 
@@ -65,4 +84,15 @@ public class ConnectionInterface {
         }
     }
 
+    public static class ConnectionNotConfiguredException extends Exception {
+        public ConnectionNotConfiguredException() {
+            super("Connection mode has not been specified.");
+        }
+    }
+
+    public static class ConnectionListenerNotAllowedException extends Exception {
+        public ConnectionListenerNotAllowedException() {
+            super("Connection interface must not accept foreign connections while running in client mode.");
+        }
+    }
 }
