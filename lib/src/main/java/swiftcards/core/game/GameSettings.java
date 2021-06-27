@@ -10,10 +10,10 @@ public class GameSettings {
         players = new PlayerSlot[10];
     }
 
-    public void setDefaultPlayerConfig(boolean multiplayerMode) {
+    public void setDefaultPlayerConfig(boolean onlineMode) {
         for (int i = 0; i< players.length; i++) {
 
-            if (multiplayerMode) {
+            if (onlineMode) {
                 players[i] = new PlayerSlot(PlayerSlotStatus.NETWORK_OPEN);
             }
             else {
