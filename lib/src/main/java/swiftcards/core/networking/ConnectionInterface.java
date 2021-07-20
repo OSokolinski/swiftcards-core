@@ -18,21 +18,21 @@ public class ConnectionInterface {
 
     private final boolean clientMode;
     
-    private ConnectionInterface(boolean asClient) {
+    private ConnectionInterface(boolean asClient, int port) {
         connections = new ArrayList<>();
         clientMode = asClient;
-        listeningRunnable = new ConnectionListeningRunnable(7931);
+        listeningRunnable = new ConnectionListeningRunnable(port);
     }
 
     public static void initAsClient(String address, int port) throws IOException {
-        instance = new ConnectionInterface(true);
+        instance = new ConnectionInterface(true, port);
 
         ConnectionChannel channel = ConnectionChannel.connect(address, port);
         instance.connections.add(channel);
     }
 
     public static void initAsServer(int port) {
-        instance = new ConnectionInterface(false);
+        instance = new ConnectionInterface(false, port);
     }
 
     public void runListener() throws ConnectionListenerNotAllowedException {
