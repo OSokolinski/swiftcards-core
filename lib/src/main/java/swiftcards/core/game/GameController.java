@@ -24,16 +24,17 @@ public class GameController {
     private boolean keepLogging;
     private int sleepBetweenTurns;
 
-    public GameController() {
+    public GameController(ActivityPropagator propagator) {
 
         players = new ArrayList<>();
         mainCardPool = null;
         keepLogging = false;
         sleepBetweenTurns = 0;
+        activityPropagator = propagator;
     }
 
-    public GameController(boolean enableLogging, int sleep) {
-        this();
+    public GameController(boolean enableLogging, int sleep, ActivityPropagator propagator) {
+        this(propagator);
         keepLogging = enableLogging;
         sleepBetweenTurns = sleep;
     }
