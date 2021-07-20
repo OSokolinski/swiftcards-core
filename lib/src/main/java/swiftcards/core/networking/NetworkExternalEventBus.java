@@ -3,8 +3,9 @@ package swiftcards.core.networking;
 import swiftcards.core.util.Event;
 import swiftcards.core.util.EventBusBase;
 
-public class NetworkExternalEventBus extends EventBusBase {
+public final class NetworkExternalEventBus extends EventBusBase {
 
+    private static NetworkExternalEventBus instance = null;
 
     @Override
     public <T> void emit(Event<T> event) {
@@ -26,7 +27,7 @@ public class NetworkExternalEventBus extends EventBusBase {
             instance = new NetworkExternalEventBus();
         }
 
-        return (NetworkExternalEventBus) instance;
+        return instance;
     }
 
 }

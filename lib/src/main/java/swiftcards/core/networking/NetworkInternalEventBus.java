@@ -12,6 +12,7 @@ import swiftcards.core.util.Subscriber.*;
 
 public class NetworkInternalEventBus extends EventBusBase {
 
+    private static NetworkInternalEventBus instance = null;
 
     public NetworkInternalEventBus() {
         super();
@@ -23,17 +24,17 @@ public class NetworkInternalEventBus extends EventBusBase {
             instance = new NetworkInternalEventBus();
         }
 
-        return (NetworkInternalEventBus) instance;
+        return instance;
     }
 
     BasicConsumer<ChannelIncomingData> onDataReceived = (dataObject) -> {
 
-        if (dataObject.getData() instanceof Player) {
+        if (dataObject.getData() instanceof PlayerCredentials) {
 
-            NetworkPlayer tempNetworkPlayer = (NetworkPlayer) dataObject.getData();
+            PlayerCredentials credentials = (PlayerCredentials) dataObject.getData();
 
             NetworkPlayer player = new NetworkPlayer(dataObject.getConnectionId());
-            player.setDisplayName(tempNetworkPlayer.getDisplayName());
+            player.setDisplayName(credentials.getDisplayName());
 
             emit(new PlayerJoined(player));
         }

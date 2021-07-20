@@ -8,8 +8,6 @@ import java.util.List;
 
 public abstract class EventBusBase implements EventBus {
 
-    protected static EventBus instance = null;
-
     protected final HashMap<Class<? extends Event<?>>, List<Subscriber<?>>> subscribers;
 
     protected EventBusBase() {
