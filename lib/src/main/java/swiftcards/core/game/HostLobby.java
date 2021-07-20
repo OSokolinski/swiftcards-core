@@ -1,6 +1,7 @@
 package swiftcards.core.game;
 
 import swiftcards.core.networking.ConnectionInterface;
+import swiftcards.core.networking.NetworkActivityPropagator;
 import swiftcards.core.networking.NetworkInternalEventBus;
 import swiftcards.core.networking.event.PlayerJoined;
 import swiftcards.core.player.HumanPlayer;
@@ -19,7 +20,7 @@ public class HostLobby implements Lobby {
     private HostLobby(LobbyType type, GameSettings settings) {
         gameSettings = settings;
         lobbyType = type;
-        gameController = new GameController();
+        gameController = new GameController(type != LobbyType.OFFLINE ? new NetworkActivityPropagator() : null);
         gameSettings.setDefaultPlayerConfig(type == LobbyType.ONLINE);
     }
 
