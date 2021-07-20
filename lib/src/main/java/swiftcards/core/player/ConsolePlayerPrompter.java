@@ -3,11 +3,12 @@ package swiftcards.core.player;
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-public class ConsolePlayerPrompter implements PlayerPrompter {
+public class ConsolePlayerPrompter implements PlayerPrompter, Serializable {
 
     private List<Card> cachedCardList;
     private List<Integer> cachedEligibleCardIds;

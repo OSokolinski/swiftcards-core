@@ -1,6 +1,8 @@
 package swiftcards.core.card;
 
-public interface Card extends Cloneable {
+import java.io.Serializable;
+
+public interface Card extends Cloneable, Serializable {
 
     /**
      * @return ID of the card

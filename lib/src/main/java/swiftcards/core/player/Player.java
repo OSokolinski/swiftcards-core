@@ -5,7 +5,9 @@ import swiftcards.core.card.CardColor;
 import swiftcards.core.card.GeneralCardPool;
 import swiftcards.core.card.PlayerCardPool;
 
-public interface Player {
+import java.io.Serializable;
+
+public interface Player extends Serializable {
 
     /**
      * @return Information, if player has finished the game

@@ -3,12 +3,14 @@ package swiftcards.core.player.activities;
 import swiftcards.core.card.Card;
 import swiftcards.core.player.PlayerActivity;
 
+import java.io.Serializable;
+
 public class CardLiedOnTable extends PlayerActivity<CardLiedOnTable.CardLiedByPlayer> {
     public CardLiedOnTable(Card card, int playerId) {
         super(new CardLiedByPlayer(card, playerId));
     }
 
-    public static class CardLiedByPlayer {
+    public static class CardLiedByPlayer implements Serializable {
 
         Card card;
         int playerId;
