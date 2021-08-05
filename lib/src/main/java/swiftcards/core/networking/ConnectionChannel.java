@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Date;
 import swiftcards.core.networking.event.DataReceived;
 import swiftcards.core.util.Event;
 
@@ -60,8 +59,7 @@ public class ConnectionChannel {
         try {
             objectOutputStream.writeObject(objectToSend);
             objectOutputStream.flush();
-
-            System.out.printf("[%d] Sent object as instance of: %s%n", (new Date()).getTime(), objectToSend.getClass());
+            objectOutputStream.reset();
         }
         catch (IOException e) {
             handleSendingError(e);
