@@ -2,7 +2,7 @@ package swiftcards.core.util;
 
 public abstract class Freezable {
 
-    protected volatile boolean isFrozen = false;
+    private volatile boolean isFrozen = false;
 
     /**
      * Freezing current thread
