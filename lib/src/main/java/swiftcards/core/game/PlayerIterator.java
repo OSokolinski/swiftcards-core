@@ -98,30 +98,7 @@ public class PlayerIterator {
      * Stopping next player
      */
     public void stopNextPlayer() {
-
-        if (getPlayersInGameCount() == 2) {
-            stoppedPlayer = iterator;
-            return;
-        }
-
-        if (iterationStep > 0) {
-
-            if (iterator >= (players.size() - 1)) {
-                stoppedPlayer = 0;
-            }
-            else {
-                stoppedPlayer = (iterator + 1);
-            }
-        }
-        else if (iterationStep < 0) {
-
-            if (iterator <= 0) {
-                stoppedPlayer = players.size() - 1;
-            }
-            else {
-                stoppedPlayer = (iterator - 1);
-            }
-        }
+        stoppedPlayer = iterator;
     }
 
     /**
@@ -134,6 +111,8 @@ public class PlayerIterator {
         }
         else {
             iterationStep = (-1) * iterationStep;
+            doIteration();
+            doIteration();
         }
     }
 

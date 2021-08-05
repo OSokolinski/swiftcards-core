@@ -56,7 +56,7 @@ public class PlayerIteratorTest {
 
         PlayerIterator playerIterator = new PlayerIterator(players);
 
-        int[] expectedSequence = new int[] {0, 1, 2, 3, 4, 0, 1, 0, 4, 3, 2, 1, 2, 3};
+        int[] expectedSequence = new int[] {0, 1, 2, 3, 4, 0, 4, 3, 2, 1, 0, 1, 2, 3};
 
         for (int i = 0; i < expectedSequence.length; i++) {
 
@@ -93,7 +93,7 @@ public class PlayerIteratorTest {
 
         PlayerIterator playerIterator = new PlayerIterator(players);
 
-        int[] expectedSequence = new int[] {0, 1, 2, 4, 0, 4, 3, 2, 0};
+        int[] expectedSequence = new int[] {0, 1, 3, 4, 3, 2, 1, 4, 3};
 
         for (int i = 0; i < expectedSequence.length; i++) {
 
