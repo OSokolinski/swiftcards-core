@@ -7,18 +7,15 @@ import swiftcards.core.networking.NetworkExternalEventBus;
 import swiftcards.core.networking.NetworkInternalEventBus;
 import swiftcards.core.networking.event.IncomingEvent;
 import swiftcards.core.networking.event.ingame.*;
+import swiftcards.core.util.Freezable;
 import swiftcards.core.util.Subscriber;
 
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-public class NetworkPlayerPrompter implements PlayerPrompter {
+public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
 
     private final int connectionId;
     private final Subscriber<IncomingEvent> eventHandler;
-
-    private volatile Lock threadLock;
 
     private Card cachedSelectedCard;
     private CardColor cachedSelectedColor;
@@ -26,7 +23,6 @@ public class NetworkPlayerPrompter implements PlayerPrompter {
     public NetworkPlayerPrompter(int networkConnectionId) {
 
         connectionId = networkConnectionId;
-        threadLock = new ReentrantLock();
 
         eventHandler = new Subscriber<IncomingEvent>((event) -> {
 
@@ -42,7 +38,7 @@ public class NetworkPlayerPrompter implements PlayerPrompter {
             }
             else return;
 
-            threadLock.unlock();
+            resume();
         });
 
         NetworkInternalEventBus.getInstance().on(ExternalEventEmitted.class, eventHandler);
@@ -70,7 +66,7 @@ public class NetworkPlayerPrompter implements PlayerPrompter {
     public Card selectCard() {
 
         NetworkExternalEventBus.getInstance().emit(new PlayerTurnExpected(), connectionId);
-        threadLock.lock();
+        freeze();
 
         return cachedSelectedCard;
     }
@@ -79,7 +75,7 @@ public class NetworkPlayerPrompter implements PlayerPrompter {
     public CardColor selectCardColor() {
 
         NetworkExternalEventBus.getInstance().emit(new ColorChooseExpected(), connectionId);
-        threadLock.lock();
+        freeze();
 
         return cachedSelectedColor;
     }
@@ -90,7 +86,7 @@ public class NetworkPlayerPrompter implements PlayerPrompter {
     }
 
     public void cleanUp() {
-        threadLock.unlock();
+        resume();
         eventHandler.unsubscribe();
     }
 }
