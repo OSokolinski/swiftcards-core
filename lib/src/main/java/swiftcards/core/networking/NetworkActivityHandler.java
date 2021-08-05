@@ -65,7 +65,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<Integer> activitySubject = a.getActivitySubject();
                 int playerId = activitySubject.getSubject();
 
-                System.out.printf("Player %d makes turn stopped%n", playerId);
+                System.out.printf("Player %d makes turn%n", playerId);
             }
             else if (activity instanceof CardSetOnTable) {
 
