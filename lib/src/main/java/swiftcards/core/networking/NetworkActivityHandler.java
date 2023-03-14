@@ -11,13 +11,22 @@ import swiftcards.core.networking.event.DataReceived;
 import swiftcards.core.player.PlayerActivity;
 import swiftcards.core.player.activities.*;
 import swiftcards.core.player.activities.CardLiedOnTable.*;
+import swiftcards.core.util.ConfigService;
 import swiftcards.core.util.Subscriber;
 
 public class NetworkActivityHandler {
 
-    Subscriber<ChannelIncomingData> onActivityReceived;
+    private final Subscriber<ChannelIncomingData> onActivityReceived;
+    private final NetworkInternalEventBus networkInternalEventBus;
 
-    public NetworkActivityHandler() {
+    public void stop() {
+        networkInternalEventBus.unsubscribe(DataReceived.class, onActivityReceived);
+    }
+
+    public NetworkActivityHandler(NetworkInternalEventBus networkInternalEventBus) {
+
+        NetworkActivityPresenter activityPresenter = ConfigService.getInstance().getNetworkActivityPresenter();
+        this.networkInternalEventBus = networkInternalEventBus;
 
         onActivityReceived = new Subscriber<>((rvdData) -> {
 
@@ -32,8 +41,9 @@ public class NetworkActivityHandler {
                 CardLiedOnTable a = (CardLiedOnTable) activity;
                 ActivitySubject<CardLiedByPlayer> activitySubject = a.getActivitySubject();
                 CardLiedByPlayer cardLiedByPlayer = activitySubject.getSubject();
+                Card card = cardLiedByPlayer.getCard();
 
-                System.out.printf("Card lied on table: %s by player %d%n", cardLiedByPlayer.getCard(), cardLiedByPlayer.getPlayerId());
+                activityPresenter.cardLiedOnTableByPlayer(card);
             }
             else if (activity instanceof CardColorChosen) {
 
@@ -41,7 +51,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<CardColor> activitySubject = a.getActivitySubject();
                 CardColor cardColor = activitySubject.getSubject();
 
-                System.out.printf("Card color chosen: %s%n", cardColor);
+                activityPresenter.cardColorChosen(cardColor);
             }
             else if (activity instanceof CardsPulledFromPool) {
 
@@ -49,7 +59,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<Integer> activitySubject = a.getActivitySubject();
                 int cardAmount = activitySubject.getSubject();
 
-                System.out.printf("Cards pulled by player: %d%n", cardAmount);
+                activityPresenter.cardsPulledByPlayer(cardAmount);
             }
             else if (activity instanceof PlayerStopped) {
 
@@ -57,7 +67,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<Integer> activitySubject = a.getActivitySubject();
                 int playerId = activitySubject.getSubject();
 
-                System.out.printf("Player %d has been stopped%n", playerId);
+                activityPresenter.playerStopped(playerId);
             }
             else if (activity instanceof PlayerTurnPending) {
 
@@ -65,7 +75,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<Integer> activitySubject = a.getActivitySubject();
                 int playerId = activitySubject.getSubject();
 
-                System.out.printf("Player %d makes turn%n", playerId);
+                activityPresenter.playerTurdStarted(playerId);
             }
             else if (activity instanceof CardSetOnTable) {
 
@@ -73,7 +83,7 @@ public class NetworkActivityHandler {
                 ActivitySubject<Card> activitySubject = a.getActivitySubject();
                 Card card = activitySubject.getSubject();
 
-                System.out.printf("Card %s has been set on the table%n", card);
+                activityPresenter.initialCardSetOnTable(card);
             }
             else if (activity instanceof CardsToTakeIncreased) {
 
@@ -81,15 +91,14 @@ public class NetworkActivityHandler {
                 ActivitySubject<Integer> activitySubject = a.getActivitySubject();
                 int cardsToTake = activitySubject.getSubject();
 
-                System.out.printf("Cards to take has been increased to %d%n", cardsToTake);
+                activityPresenter.cardsToTakeIncreased(cardsToTake);
             }
             else if (activity instanceof GameQueueSequenceReverted) {
-                System.out.println("Game queue has been reverted");
+                activityPresenter.gameQueueSequenceReverted();
             }
 
         });
 
-
-        NetworkInternalEventBus.getInstance().on(DataReceived.class, onActivityReceived);
+        this.networkInternalEventBus.on(DataReceived.class, onActivityReceived);
     }
 }

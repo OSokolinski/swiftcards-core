@@ -1,4 +1,4 @@
-package swiftcards.core.networking.event;
+package swiftcards.core.networking.event.ingame;
 
 import swiftcards.core.networking.NetworkEventBase;
 import swiftcards.core.player.Player;

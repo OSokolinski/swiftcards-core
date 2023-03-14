@@ -1,7 +1,10 @@
 package swiftcards.core.networking;
 
+import swiftcards.core.networking.event.ChannelDisconnected;
 import swiftcards.core.networking.event.SocketAccepted;
 import swiftcards.core.util.ApplicationSettings;
+import swiftcards.core.util.ConfigService;
+import swiftcards.core.util.Logger;
 import swiftcards.core.util.Subscriber;
 
 import java.io.IOException;
@@ -13,26 +16,30 @@ public class ConnectionInterface {
 
     private final List<ConnectionChannel> connections;
     private final ConnectionListeningRunnable listeningRunnable;
-
-    private static ConnectionInterface instance;
-
     private final boolean clientMode;
-    
-    private ConnectionInterface(boolean asClient, int port) {
+
+    private final NetworkInternalEventBus networkInternalEventBus;
+
+    private ConnectionInterface(boolean asClient, int port, NetworkInternalEventBus networkInternalEventBus) {
         connections = new ArrayList<>();
         clientMode = asClient;
-        listeningRunnable = new ConnectionListeningRunnable(port);
+        listeningRunnable = new ConnectionListeningRunnable(port, networkInternalEventBus);
+        this.networkInternalEventBus = networkInternalEventBus;
+
+        this.networkInternalEventBus.on(ChannelDisconnected.class, new Subscriber<>(connections::remove));
     }
 
-    public static void initAsClient(String address, int port) throws IOException {
-        instance = new ConnectionInterface(true, port);
+    public static ConnectionInterface initAsClient(String address, int port, NetworkInternalEventBus networkInternalEventBus) throws IOException {
+        ConnectionInterface instance = new ConnectionInterface(true, port, networkInternalEventBus);
 
-        ConnectionChannel channel = ConnectionChannel.connect(address, port);
+        ConnectionChannel channel = ConnectionChannel.connect(address, port, networkInternalEventBus);
         instance.connections.add(channel);
+
+        return instance;
     }
 
-    public static void initAsServer(int port) {
-        instance = new ConnectionInterface(false, port);
+    public static ConnectionInterface initAsServer(int port, NetworkInternalEventBus networkInternalEventBus) {
+        return new ConnectionInterface(false, port, networkInternalEventBus);
     }
 
     public void runListener() throws ConnectionListenerNotAllowedException {
@@ -41,17 +48,19 @@ public class ConnectionInterface {
             throw new ConnectionListenerNotAllowedException();
         }
 
-        NetworkInternalEventBus.getInstance().on(SocketAccepted.class, new Subscriber<>(
+        networkInternalEventBus.on(SocketAccepted.class, new Subscriber<>(
             (Socket s) -> {
-
                 try {
-                    connections.add(ConnectionChannel.accept(s, 0));
+                    synchronized (connections) {
+                        connections.add(ConnectionChannel.accept(s, connections.size(), networkInternalEventBus));
+                    }
+
                 }
                 catch (IOException e) {
-                    System.out.println("Could not accept socket: " + e);
+                    ConfigService.getInstance().logError("Network Socket Error. Could not accept client connection: %s", e);
                 }
 
-                System.out.println("Client connected");
+                ConfigService.getInstance().log("Client successfully connected");
             }
         ));
 
@@ -63,25 +72,31 @@ public class ConnectionInterface {
         return connections;
     }
 
-    public static ConnectionInterface getInstance() {
-
-        // TODO consider throwing ConnectionNotConfiguredException
-//        if (instance == null) {
-//            instance = new ConnectionInterface();
-//        }
-
-        return instance;
-
-    }
 
     public void sendTo(int connectionId, Object dataToSend) {
         connections.get(connectionId).sendObject(dataToSend);
     }
 
-    public void sendToAll(Object dataToSend) {
-        for (ConnectionChannel channel : connections) {
-            channel.sendObject(dataToSend);
+    public synchronized void sendToAll(Object dataToSend) {
+        synchronized (connections) {
+            for (ConnectionChannel channel : connections) {
+                channel.sendObject(dataToSend);
+            }
         }
+    }
+
+    public void disconnect(int connectionId) {
+        try {
+            connections.get(connectionId).close();
+            ConfigService.getInstance().log("Connection ID: %d ended by force", connectionId);
+        }
+        catch (Exception e) {
+            ConfigService.getInstance().logError("Unable to disconnect: %s", e);
+        }
+        synchronized (connections) {
+            connections.remove(connectionId);
+        }
+
     }
 
     public static class ConnectionNotConfiguredException extends Exception {

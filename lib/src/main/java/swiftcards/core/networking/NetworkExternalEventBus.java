@@ -1,33 +1,29 @@
 package swiftcards.core.networking;
 
 import swiftcards.core.util.Event;
-import swiftcards.core.util.EventBusBase;
+import swiftcards.core.util.DefaultEventBus;
 
-public final class NetworkExternalEventBus extends EventBusBase {
+public final class NetworkExternalEventBus extends DefaultEventBus {
 
-    private static NetworkExternalEventBus instance = null;
+    private final ConnectionInterface connectionInterface;
 
     @Override
     public <T> void emit(Event<T> event) {
 
-        ConnectionInterface.getInstance().sendToAll(event);
+        connectionInterface.sendToAll(event);
 
         super.emit(event);
     }
 
     public <T> void emit(Event<T> event, int connectionId) {
 
-        ConnectionInterface.getInstance().sendTo(connectionId, event);
+        connectionInterface.sendTo(connectionId, event);
 
         super.emit(event);
     }
 
-    public static NetworkExternalEventBus getInstance() {
-        if (instance == null) {
-            instance = new NetworkExternalEventBus();
-        }
-
-        return instance;
+    public NetworkExternalEventBus(ConnectionInterface connectionInterface) {
+        this.connectionInterface = connectionInterface;
     }
 
 }

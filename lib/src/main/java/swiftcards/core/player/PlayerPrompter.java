@@ -2,6 +2,7 @@ package swiftcards.core.player;
 
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
+import swiftcards.core.game.lobby.GameSettings;
 
 import java.util.List;
 
@@ -41,4 +42,11 @@ public interface PlayerPrompter {
      * @param cards New player card pool
      */
     void refreshCards(List<Card> cards);
+
+    /**
+     * Getting current settings from the host. Invoked always in a lobby, when game is not started yet
+     *
+     * @return Settings from the host
+     */
+    //GameSettings getCurrentSettings();
 }

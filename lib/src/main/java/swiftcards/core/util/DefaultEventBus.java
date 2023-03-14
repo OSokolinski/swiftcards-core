@@ -1,20 +1,22 @@
 package swiftcards.core.util;
 
+import swiftcards.core.networking.ExternalEventEmitted;
 import swiftcards.core.util.Subscriber.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class EventBusBase implements EventBus {
+public class DefaultEventBus implements EventBus {
 
     protected final HashMap<Class<? extends Event<?>>, List<Subscriber<?>>> subscribers;
 
-    protected EventBusBase() {
+    public DefaultEventBus() {
         subscribers = new HashMap<>();
     }
 
-    public <T> void on(Class<? extends Event<T>> eventClass, Subscriber<T> handler) {
+    @Override
+    public synchronized <T> void on(Class<? extends Event<T>> eventClass, Subscriber<T> handler) {
 
         if (!subscribers.containsKey(eventClass)) {
             subscribers.put(eventClass, new ArrayList<>());
@@ -23,6 +25,7 @@ public abstract class EventBusBase implements EventBus {
         subscribers.get(eventClass).add(handler);
     }
 
+    @Override
     public <T> void on(Class<? extends Event<T>> eventClass, ConsumerBase<T> handler) {
 
         Subscriber<T> subscriber;
@@ -39,7 +42,8 @@ public abstract class EventBusBase implements EventBus {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> void emit(Event<T> event) /*throws EventEmitException*/ {
+    @Override
+    public synchronized <T> void emit(Event<T> event) /*throws EventEmitException*/ {
 
         List<Subscriber<?>> handlers = subscribers.getOrDefault(event.getClass(), new ArrayList<>());
 
@@ -62,9 +66,15 @@ public abstract class EventBusBase implements EventBus {
         }
 
     }
-    
-    public <T> void unsubscribe(Class<? extends Event<T>> eventClass, Subscriber<T> subscriber) {
+
+    @Override
+    public synchronized  <T> void unsubscribe(Class<? extends Event<T>> eventClass, Subscriber<T> subscriber) {
         subscribers.get(eventClass).remove(subscriber);
+    }
+
+    @Override
+    public void clear() {
+        subscribers.clear();
     }
 
     public static class EventEmitException extends Exception {

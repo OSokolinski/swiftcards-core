@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class HumanPlayer extends PlayerBase implements Player {
 
     private final PlayerPrompter prompter;
+    protected String displayName = "Me";
 
     public HumanPlayer(Class<? extends PlayerPrompter> playerPrompterClass) throws Exception {
         super();
@@ -26,7 +27,6 @@ public class HumanPlayer extends PlayerBase implements Player {
             .stream()
             .map(Card::getId)
             .collect(Collectors.toList());
-
 
         prompter.refreshCards(playerCardPool.getCards());
         prompter.showPlayerCards(eligibleCardIds);

@@ -1,7 +1,9 @@
 package swiftcards.core.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import swiftcards.core.card.*;
 import swiftcards.core.card.GeneralCardPool.UnableToGenerateCardPoolException;
@@ -41,6 +43,25 @@ public class GameController {
 
     public void addPlayer(Player player) {
         players.add(player);
+    }
+
+    public Player applyPlayer(Player player) {
+        ArrayList<Integer> playerIds = players.stream()
+            .map(Player::getId)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        int id = 0;
+        boolean idFree;
+
+        do {
+            idFree = !playerIds.contains(id);
+            if (!idFree) {
+                id++;
+            }
+        } while (!idFree);
+
+        addPlayer(player.apply(id));
+        return player;
     }
 
     public ArrayList<Player> getPlayers() {

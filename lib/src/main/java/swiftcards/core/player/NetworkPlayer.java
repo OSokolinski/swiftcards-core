@@ -3,6 +3,8 @@ package swiftcards.core.player;
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
 import swiftcards.core.card.GeneralCardPool;
+import swiftcards.core.networking.NetworkExternalEventBus;
+import swiftcards.core.networking.NetworkInternalEventBus;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,10 +12,12 @@ import java.util.stream.Collectors;
 public class NetworkPlayer extends PlayerBase implements Player {
 
     private final NetworkPlayerPrompter prompter;
+    private final int connectionId;
 
-    public NetworkPlayer(int networkConnectionId) {
+    public NetworkPlayer(int networkConnectionId, NetworkInternalEventBus networkInternalEventBus, NetworkExternalEventBus networkExternalEventBus) {
         super();
-        prompter = new NetworkPlayerPrompter(networkConnectionId);
+        prompter = new NetworkPlayerPrompter(networkConnectionId, networkInternalEventBus, networkExternalEventBus);
+        connectionId = networkConnectionId;
     }
 
     @Override
@@ -46,5 +50,9 @@ public class NetworkPlayer extends PlayerBase implements Player {
     @Override
     public CardColor choosePoolColor() {
         return prompter.selectCardColor();
+    }
+
+    public int getConnectionId() {
+        return connectionId;
     }
 }

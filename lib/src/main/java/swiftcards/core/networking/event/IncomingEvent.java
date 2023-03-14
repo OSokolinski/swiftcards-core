@@ -1,5 +1,6 @@
 package swiftcards.core.networking.event;
 
+import swiftcards.core.networking.NetworkEventBase;
 import swiftcards.core.util.Event;
 
 public class IncomingEvent {
@@ -19,4 +20,5 @@ public class IncomingEvent {
     public int getConnectionId() {
         return connectionId;
     }
+
 }

@@ -14,10 +14,12 @@ public class ConnectionListeningRunnable implements Runnable {
     private final int port;
     private volatile boolean keepWaitingForConnections;
     private ServerSocket serverSocket;
+    private NetworkInternalEventBus networkInternalEventBus;
 
-    public ConnectionListeningRunnable(int listeningPort) {
+    public ConnectionListeningRunnable(int listeningPort, NetworkInternalEventBus networkInternalEventBus) {
         port = listeningPort;
         keepWaitingForConnections = true;
+        this.networkInternalEventBus = networkInternalEventBus;
     }
 
     @Override
@@ -26,7 +28,7 @@ public class ConnectionListeningRunnable implements Runnable {
         try {
             serverSocket = new ServerSocket(port);
 
-            NetworkInternalEventBus.getInstance().emit(new ServerListenerStarted());
+            networkInternalEventBus.emit(new ServerListenerStarted());
 
             while (keepWaitingForConnections) {
                 Socket acceptedSocket = null;
@@ -35,18 +37,18 @@ public class ConnectionListeningRunnable implements Runnable {
                     acceptedSocket = serverSocket.accept();
                 }
                 catch (IOException e0) {
-                    NetworkInternalEventBus.getInstance().emit(new SocketCouldNotBeAccepted(e0));
+                    networkInternalEventBus.emit(new SocketCouldNotBeAccepted(e0));
                 }
 
                 if (acceptedSocket != null) {
-                    NetworkInternalEventBus.getInstance().emit(new SocketAccepted(acceptedSocket));
+                    networkInternalEventBus.emit(new SocketAccepted(acceptedSocket));
                 }
             }
 
 
         }
         catch (IOException e1) {
-            NetworkInternalEventBus.getInstance().emit(new ServerCannotNotStart(e1));
+            networkInternalEventBus.emit(new ServerCannotNotStart(e1));
         }
 
     }

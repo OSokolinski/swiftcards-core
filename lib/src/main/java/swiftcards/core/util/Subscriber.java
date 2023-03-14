@@ -25,10 +25,6 @@ public class Subscriber<T> {
 
     }
 
-    public Subscriber<T> unsubscribe() {
-        return this;
-    }
-
     @FunctionalInterface
     public interface BasicConsumer<T> extends ConsumerBase<T> {
         void accept(T data);

@@ -16,13 +16,17 @@ public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
 
     private final int connectionId;
     private final Subscriber<IncomingEvent> eventHandler;
+    private final NetworkInternalEventBus networkInternalEventBus;
+    private final NetworkExternalEventBus networkExternalEventBus;
 
     private Card cachedSelectedCard;
     private CardColor cachedSelectedColor;
 
-    public NetworkPlayerPrompter(int networkConnectionId) {
+    public NetworkPlayerPrompter(int networkConnectionId, NetworkInternalEventBus networkInternalEventBus, NetworkExternalEventBus networkExternalEventBus) {
 
         connectionId = networkConnectionId;
+        this.networkInternalEventBus = networkInternalEventBus;
+        this.networkExternalEventBus = networkExternalEventBus;
 
         eventHandler = new Subscriber<IncomingEvent>((event) -> {
 
@@ -41,7 +45,7 @@ public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
             resume();
         });
 
-        NetworkInternalEventBus.getInstance().on(ExternalEventEmitted.class, eventHandler);
+        networkInternalEventBus.on(ExternalEventEmitted.class, eventHandler);
     }
 
     private void onCardSelected(Card selectedCard) {
@@ -54,18 +58,18 @@ public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
 
     @Override
     public void showCardOnTable(Card cardOnTable) {
-        NetworkExternalEventBus.getInstance().emit(new CardLiedOnTable(cardOnTable), connectionId);
+        networkExternalEventBus.emit(new CardLiedOnTable(cardOnTable), connectionId);
     }
 
     @Override
     public void showPlayerCards(List<Integer> eligibleCardIds) {
-        NetworkExternalEventBus.getInstance().emit(new PlayerCardsShown(eligibleCardIds), connectionId);
+        networkExternalEventBus.emit(new PlayerCardsShown(eligibleCardIds), connectionId);
     }
 
     @Override
     public Card selectCard() {
 
-        NetworkExternalEventBus.getInstance().emit(new PlayerTurnExpected(), connectionId);
+        networkExternalEventBus.emit(new PlayerTurnExpected(), connectionId);
         freeze();
 
         return cachedSelectedCard;
@@ -74,7 +78,7 @@ public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
     @Override
     public CardColor selectCardColor() {
 
-        NetworkExternalEventBus.getInstance().emit(new ColorChooseExpected(), connectionId);
+        networkExternalEventBus.emit(new ColorChooseExpected(), connectionId);
         freeze();
 
         return cachedSelectedColor;
@@ -82,11 +86,11 @@ public class NetworkPlayerPrompter extends Freezable implements PlayerPrompter {
 
     @Override
     public void refreshCards(List<Card> cards) {
-        NetworkExternalEventBus.getInstance().emit(new PlayerCardsRefreshed(cards), connectionId);
+        networkExternalEventBus.emit(new PlayerCardsRefreshed(cards), connectionId);
     }
 
     public void cleanUp() {
         resume();
-        eventHandler.unsubscribe();
+        networkInternalEventBus.unsubscribe(ExternalEventEmitted.class, eventHandler);
     }
 }

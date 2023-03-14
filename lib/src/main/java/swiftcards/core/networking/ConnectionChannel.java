@@ -1,10 +1,14 @@
 package swiftcards.core.networking;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+
+import swiftcards.core.networking.event.ChannelDisconnected;
 import swiftcards.core.networking.event.DataReceived;
+import swiftcards.core.util.ConfigService;
 import swiftcards.core.util.Event;
 
 public class ConnectionChannel {
@@ -17,18 +21,20 @@ public class ConnectionChannel {
     private boolean isReady = false;
     private boolean serverMode = false;
     private ObjectOutputStream objectOutputStream;
+    private NetworkInternalEventBus networkInternalEventBus;
 
-    private ConnectionChannel(Socket connectionSocket) throws IOException {
+    private ConnectionChannel(Socket connectionSocket, NetworkInternalEventBus networkInternalEventBus) throws IOException {
         socket = connectionSocket;
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
         listeningRunnable = new ConnectionChannelListeningRunnable(socket, this::handleReceivedObject);
+        this.networkInternalEventBus = networkInternalEventBus;
 
         listeningRunnable.onNetworkExceptionIssued(this::handleListeningError);
 
     }
 
-    public static ConnectionChannel accept(Socket acceptedSocket, int connectionId) throws IOException {
-        ConnectionChannel connectionChannel = new ConnectionChannel(acceptedSocket);
+    public static ConnectionChannel accept(Socket acceptedSocket, int connectionId, NetworkInternalEventBus networkInternalEventBus) throws IOException {
+        ConnectionChannel connectionChannel = new ConnectionChannel(acceptedSocket, networkInternalEventBus);
         connectionChannel.runConnectionThreads();
         connectionChannel.connectionId = connectionId;
         connectionChannel.serverMode = true;
@@ -36,8 +42,8 @@ public class ConnectionChannel {
         return connectionChannel;
     }
 
-    public static ConnectionChannel connect(String ipAddress, int port) throws IOException {
-        ConnectionChannel connectionChannel = new ConnectionChannel(new Socket(ipAddress, port));
+    public static ConnectionChannel connect(String ipAddress, int port, NetworkInternalEventBus networkInternalEventBus) throws IOException {
+        ConnectionChannel connectionChannel = new ConnectionChannel(new Socket(ipAddress, port), networkInternalEventBus);
         connectionChannel.runConnectionThreads();
 
         return connectionChannel;
@@ -48,6 +54,10 @@ public class ConnectionChannel {
 
         listeningRunnable.stop();
         socket.close();
+    }
+
+    public int getConnectionId() {
+        return connectionId;
     }
 
     public void dispatchEvent(Event<?> event) {
@@ -93,26 +103,36 @@ public class ConnectionChannel {
     }
 
     private void handleListeningError(Exception e) {
+
+        ConfigService.getInstance().logError("Exception while looking forward for a data: " + e);
+
         if (e instanceof SocketException &&
             (e.getMessage().equals("Socket closed") || e.getMessage().equals("Connection reset"))
         ) {
 
             try {
                 close();
+                ConfigService.getInstance().log("Connection ID: %d properly closed.", connectionId);
             }
             catch (IOException ioe) {
-                System.out.println("Could not exit connection channel: " + ioe);
+                ConfigService.getInstance().logError("Could not exit connection channel: " + ioe);
             }
-
-            System.out.printf("Connection ID: %d closed.%n", connectionId);
-            return;
         }
+        else if (e instanceof EOFException) {
+            try {
+                close();
+                ConfigService.getInstance().log("Connection ID: %d ended by remote.", connectionId);
+            }
+            catch (IOException ioe) {
+                ConfigService.getInstance().logError("Could not exit connection channel: " + ioe);
+            }
+        }
+        networkInternalEventBus.emit(new ChannelDisconnected(this));
 
-        System.out.println("Exception while looking forward for a data: " + e);
     }
 
     private void handleReceivedObject(Object object) {
-        NetworkInternalEventBus.getInstance().emit(new DataReceived(new ChannelIncomingData(connectionId, object)));
+        networkInternalEventBus.emit(new DataReceived(new ChannelIncomingData(connectionId, object)));
     }
 
 }

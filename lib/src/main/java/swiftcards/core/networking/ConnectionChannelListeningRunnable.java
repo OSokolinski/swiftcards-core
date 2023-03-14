@@ -38,5 +38,4 @@ public final class ConnectionChannelListeningRunnable extends ConnectionChannelR
     private void receiveObject(Object receivedObject) {
         onObjectReceived.accept(receivedObject);
     }
-
 }

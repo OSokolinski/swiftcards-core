@@ -1,7 +1,7 @@
-package swiftcards.core.game;
+package swiftcards.core.game.lobby.event;
 
+import swiftcards.core.game.lobby.PlayerSlot;
 import swiftcards.core.util.EventBase;
-import swiftcards.core.game.GameSettings.PlayerSlot;
 
 public class LobbySlotChanged extends EventBase<PlayerSlot> {
     LobbySlotChanged(PlayerSlot slot) {
