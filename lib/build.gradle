@@ -6,14 +6,14 @@
  * User Manual available at https://docs.gradle.org/6.8.3/userguide/building_java_projects.html
  */
 
-group = 'swiftcards-core'
-version = '0.0.1'
-
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
     id 'idea'
 }
+
+group = 'swiftcards-core'
+version = '0.0.1'
 
 repositories {
     // Use JCenter for resolving dependencies.
@@ -21,8 +21,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'junit:junit:4.12'
-    implementation 'junit:junit:4.12'
 
     // Use JUnit test framework.
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'
