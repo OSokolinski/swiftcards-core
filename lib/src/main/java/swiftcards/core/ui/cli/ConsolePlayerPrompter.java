@@ -1,7 +1,9 @@
-package swiftcards.core.player;
+package swiftcards.core.ui.cli;
 
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
+import swiftcards.core.game.lobby.GameSettings;
+import swiftcards.core.player.PlayerPrompter;
 
 import java.io.Serializable;
 import java.util.LinkedList;

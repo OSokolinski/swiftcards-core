@@ -1,6 +1,7 @@
 package swiftcards.core.util;
 
 import swiftcards.core.networking.NetworkActivityPresenter;
+import swiftcards.core.ui.cli.ConsoleNetworkActivityPresenter;
 import swiftcards.core.ui.cli.ConsolePlayerPrompter;
 import swiftcards.core.player.PlayerPrompter;
 
@@ -31,7 +32,7 @@ public class ConfigService {
     }
 
     public NetworkActivityPresenter getNetworkActivityPresenter() {
-        return null;
+        return new ConsoleNetworkActivityPresenter();
     }
 
     public String getPlayerName() {
