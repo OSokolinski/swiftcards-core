@@ -52,6 +52,7 @@ public class GuestLobby extends Freezable implements Lobby {
 
         externalNetworkEventBus = new NetworkExternalEventBus(connectionInterface);
         internalNetworkEventBus.on(ExternalEventEmitted.class, onIncomingEventSubscriber);
+        internalNetworkEventBus.on(ChannelDisconnected.class, onDisconnectionSubscriber);
         externalNetworkEventBus.on(ChannelDisconnected.class, onDisconnectionSubscriber);
         externalNetworkEventBus.emit(new GuestHandshake(handshakeCredentials));
         freeze();
