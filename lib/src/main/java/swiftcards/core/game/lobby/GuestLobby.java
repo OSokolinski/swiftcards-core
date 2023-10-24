@@ -13,6 +13,7 @@ import swiftcards.core.util.*;
 public class GuestLobby extends Freezable implements Lobby {
 
     private final Subscriber<IncomingEvent> onIncomingEventSubscriber;
+    private final Subscriber<ConnectionChannel> onDisconnectionSubscriber;
     private final PlayerCredentials handshakeCredentials;
 
     private Integer port = 56677;
@@ -34,6 +35,7 @@ public class GuestLobby extends Freezable implements Lobby {
         handshakeCredentials = playerCredentials;
         internalNetworkEventBus = new NetworkInternalEventBus();
         onIncomingEventSubscriber = new Subscriber<>(this::onIncomingEvent);
+        onDisconnectionSubscriber = new Subscriber<>(this::passDisconnectionInfo);
         lobbyEventBus = new DefaultEventBus();
     }
 
@@ -49,6 +51,7 @@ public class GuestLobby extends Freezable implements Lobby {
 
         externalNetworkEventBus = new NetworkExternalEventBus(connectionInterface);
         internalNetworkEventBus.on(ExternalEventEmitted.class, onIncomingEventSubscriber);
+        externalNetworkEventBus.on(ChannelDisconnected.class, onDisconnectionSubscriber);
         externalNetworkEventBus.emit(new GuestHandshake(handshakeCredentials));
         freeze();
 
@@ -91,9 +94,9 @@ public class GuestLobby extends Freezable implements Lobby {
             ConfigService.getInstance().log("Received updated lobby settings");
             lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
         }
-        else if (event.getEvent() instanceof ChannelDisconnected) {
-            ConfigService.getInstance().log("Closed by host");
-            lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
-        }
+    }
+
+    private void passDisconnectionInfo(ConnectionChannel channel) {
+        lobbyEventBus.emit(new ChannelDisconnected(channel));
     }
 }
