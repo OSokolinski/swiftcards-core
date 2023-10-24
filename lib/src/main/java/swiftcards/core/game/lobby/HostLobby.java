@@ -179,9 +179,10 @@ public class HostLobby extends Freezable implements Lobby {
 
             if (playerKicked) {
                 playersToKick.add(player);
-            }
-            if (player instanceof NetworkPlayer) {
-                connectionInterface.disconnect(((NetworkPlayer) player).getConnectionId());
+
+                if (player instanceof NetworkPlayer) {
+                    connectionInterface.disconnect(((NetworkPlayer) player).getConnectionId());
+                }
             }
         }
         gameController.getPlayers().removeAll(playersToKick);
