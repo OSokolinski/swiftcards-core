@@ -28,6 +28,7 @@ public class GuestLobby extends Freezable implements Lobby {
     }
 
     public GuestLobby(PlayerCredentials playerCredentials, Integer customPort) {
+        System.out.println("COMMIT TEST");
         if (customPort != null) {
             port = customPort;
         }
