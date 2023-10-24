@@ -94,6 +94,10 @@ public class GuestLobby extends Freezable implements Lobby {
             ConfigService.getInstance().log("Received updated lobby settings");
             lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
         }
+        else if (event.getEvent() instanceof ChannelDisconnected) {
+            ConfigService.getInstance().log("Closed by host");
+            lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
+        }
     }
 
     private void passDisconnectionInfo(ConnectionChannel channel) {
