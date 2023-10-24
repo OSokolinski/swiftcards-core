@@ -1,6 +1,7 @@
 package swiftcards.core.game.lobby;
 
 import swiftcards.core.networking.*;
+import swiftcards.core.networking.event.ChannelDisconnected;
 import swiftcards.core.networking.event.lobby.ConnectedSuccessfully;
 import swiftcards.core.networking.event.IncomingEvent;
 import swiftcards.core.networking.event.ingame.GuestHandshake;
@@ -88,6 +89,10 @@ public class GuestLobby extends Freezable implements Lobby {
         }
         else if (event.getEvent() instanceof SettingsUpdated) {
             ConfigService.getInstance().log("Received updated lobby settings");
+            lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
+        }
+        else if (event.getEvent() instanceof ChannelDisconnected) {
+            ConfigService.getInstance().log("Closed by host");
             lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
         }
     }
