@@ -28,7 +28,6 @@ public class GuestLobby extends Freezable implements Lobby {
     }
 
     public GuestLobby(PlayerCredentials playerCredentials, Integer customPort) {
-        System.out.println("COMMIT TEST");
         if (customPort != null) {
             port = customPort;
         }
@@ -53,7 +52,6 @@ public class GuestLobby extends Freezable implements Lobby {
         externalNetworkEventBus = new NetworkExternalEventBus(connectionInterface);
         internalNetworkEventBus.on(ExternalEventEmitted.class, onIncomingEventSubscriber);
         internalNetworkEventBus.on(ChannelDisconnected.class, onDisconnectionSubscriber);
-        externalNetworkEventBus.on(ChannelDisconnected.class, onDisconnectionSubscriber);
         externalNetworkEventBus.emit(new GuestHandshake(handshakeCredentials));
         freeze();
 
@@ -94,10 +92,6 @@ public class GuestLobby extends Freezable implements Lobby {
         }
         else if (event.getEvent() instanceof SettingsUpdated) {
             ConfigService.getInstance().log("Received updated lobby settings");
-            lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
-        }
-        else if (event.getEvent() instanceof ChannelDisconnected) {
-            ConfigService.getInstance().log("Closed by host");
             lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
         }
     }
