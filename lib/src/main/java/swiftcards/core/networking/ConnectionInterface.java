@@ -86,7 +86,7 @@ public class ConnectionInterface {
     }
 
     public void disconnect(int connectionId) {
-        if (connections.get(connectionId) == null) return;
+        if (connections.size() - 1 < connectionId) return;
         try {
             connections.get(connectionId).close();
             ConfigService.getInstance().log("Connection ID: %d ended by force", connectionId);
