@@ -79,7 +79,7 @@ public class GuestLobby extends Freezable implements Lobby {
     public void disconnect() {
         close();
         connectionInterface.disconnect(0);
-//        internalNetworkEventBus.clear();
+        internalNetworkEventBus.clear();
     }
 
     public void toggleIsReady() {
