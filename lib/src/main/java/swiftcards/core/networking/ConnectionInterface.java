@@ -94,7 +94,9 @@ public class ConnectionInterface {
             ConfigService.getInstance().logError("Unable to disconnect: %s", e);
         }
         synchronized (connections) {
-            connections.remove(connectionId);
+            if (connections.get(connectionId) != null) {
+                connections.remove(connectionId);
+            }
         }
 
     }
