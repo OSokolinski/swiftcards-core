@@ -113,7 +113,6 @@ public class HostLobby extends Freezable implements Lobby {
         for (int i = 0; i < connectionInterface.getConnections().size(); i++) {
             connectionInterface.disconnect(i);
         }
-        internalNetworkEventBus.clear();
     }
 
     @Override
