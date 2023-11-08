@@ -21,6 +21,11 @@ public interface Lobby {
      */
     void close();
 
+    /**
+     * Destroy all network connections
+     */
+    void disconnect();
+
     ConnectionInterface getConnectionInterface();
 
     enum LobbyType {

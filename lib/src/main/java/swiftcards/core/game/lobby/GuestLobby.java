@@ -75,6 +75,7 @@ public class GuestLobby extends Freezable implements Lobby {
         return connectionInterface;
     }
 
+    @Override
     public void disconnect() {
         close();
         connectionInterface.disconnect(0);
