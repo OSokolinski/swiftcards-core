@@ -98,7 +98,18 @@ public class PlayerIterator {
      * Stopping next player
      */
     public void stopNextPlayer() {
-        stoppedPlayer = iterator;
+        boolean iteratedPlayerInactive = true;
+        int localIterator = iterator;
+        do {
+            Player candidate = players.get(localIterator);
+            if (candidate.hasFinishedPlay()) {
+                localIterator += iterationStep;
+            }
+            else {
+                stoppedPlayer = localIterator;
+                iteratedPlayerInactive = false;
+            }
+        } while (iteratedPlayerInactive);
     }
 
     /**

@@ -1,9 +1,9 @@
 package swiftcards.core.networking;
 
-import swiftcards.core.networking.event.ServerCannotNotStart;
+import swiftcards.core.networking.event.ExceptionThrown;
 import swiftcards.core.networking.event.ServerListenerStarted;
 import swiftcards.core.networking.event.SocketAccepted;
-import swiftcards.core.networking.event.SocketCouldNotBeAccepted;
+import swiftcards.core.util.ConfigService;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,7 +14,7 @@ public class ConnectionListeningRunnable implements Runnable {
     private final int port;
     private volatile boolean keepWaitingForConnections;
     private ServerSocket serverSocket;
-    private NetworkInternalEventBus networkInternalEventBus;
+    private final NetworkInternalEventBus networkInternalEventBus;
 
     public ConnectionListeningRunnable(int listeningPort, NetworkInternalEventBus networkInternalEventBus) {
         port = listeningPort;
@@ -31,24 +31,19 @@ public class ConnectionListeningRunnable implements Runnable {
             networkInternalEventBus.emit(new ServerListenerStarted());
 
             while (keepWaitingForConnections) {
-                Socket acceptedSocket = null;
-
-                try {
-                    acceptedSocket = serverSocket.accept();
-                }
-                catch (IOException e0) {
-                    networkInternalEventBus.emit(new SocketCouldNotBeAccepted(e0));
-                }
+                Socket acceptedSocket = serverSocket.accept();
 
                 if (acceptedSocket != null) {
                     networkInternalEventBus.emit(new SocketAccepted(acceptedSocket));
                 }
             }
-
-
         }
-        catch (IOException e1) {
-            networkInternalEventBus.emit(new ServerCannotNotStart(e1));
+        catch (Exception e) {
+            if (!keepWaitingForConnections && e.getMessage().equals("Socket closed")) {
+                return;
+            }
+            ConfigService.getInstance().logError("Exception while waiting for clients: %s", e.getMessage());
+            networkInternalEventBus.emit(new ExceptionThrown(e));
         }
 
     }
@@ -60,7 +55,8 @@ public class ConnectionListeningRunnable implements Runnable {
             serverSocket.close();
         }
         catch (IOException e) {
-            System.out.println("Server socket closing error: %s" + e);
+            ConfigService.getInstance().logError("Server socket closing error: %s", e.getMessage());
+            networkInternalEventBus.emit(new ExceptionThrown(e));
         }
     }
 

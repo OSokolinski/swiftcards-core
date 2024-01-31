@@ -29,9 +29,10 @@ public class NetworkPlayerPrompterHandler {
 
         this.networkInternalEventBus = networkInternalEventBus;
         this.networkExternalEventBus = networkExternalEventBus;
-        prompter = ConfigService.getInstance().getPlayerPrompter();
 
         eventSubscriber = new Subscriber<>((data) -> {
+
+            prompter = ConfigService.getInstance().getPlayerPrompter();
 
             if (!(data.getData() instanceof Event)) {
                 return;

@@ -183,4 +183,30 @@ public class PlayerIteratorTest {
 
        assertNull(pi.getPlayer());
    }
+
+   @Test
+    public void PlayerIterator_DoesNotStop_InactivePlayer() {
+       ArrayList<Player> players = new ArrayList<>();
+
+       AIPlayer p0 = new AIPlayer();
+       p0.setId(0);
+       p0.setHasFinishedPlay(false);
+       players.add(p0);
+
+       AIPlayer p1 = new AIPlayer();
+       p1.setId(1);
+       p1.setHasFinishedPlay(true);
+       players.add(p1);
+
+       AIPlayer p2 = new AIPlayer();
+       p2.setId(2);
+       p2.setHasFinishedPlay(false);
+       players.add(p2);
+
+       PlayerIterator pi = new PlayerIterator(players);
+
+       pi.getPlayer();
+       pi.stopNextPlayer();
+       assertEquals(2, pi.getStoppedPlayer());
+   }
 }

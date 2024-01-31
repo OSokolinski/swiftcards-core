@@ -2,12 +2,15 @@ package swiftcards.core.game.lobby;
 
 import swiftcards.core.networking.*;
 import swiftcards.core.networking.event.ChannelDisconnected;
+import swiftcards.core.networking.event.ExceptionThrown;
 import swiftcards.core.networking.event.lobby.ConnectedSuccessfully;
 import swiftcards.core.networking.event.IncomingEvent;
 import swiftcards.core.networking.event.ingame.GuestHandshake;
 import swiftcards.core.networking.event.ingame.HostHandshake;
+import swiftcards.core.networking.event.lobby.GameStarted;
 import swiftcards.core.networking.event.lobby.ReadinessToggled;
 import swiftcards.core.networking.event.lobby.SettingsUpdated;
+import swiftcards.core.player.NetworkPlayerPrompterHandler;
 import swiftcards.core.util.*;
 
 public class GuestLobby extends Freezable implements Lobby {
@@ -16,21 +19,17 @@ public class GuestLobby extends Freezable implements Lobby {
     private final Subscriber<ConnectionChannel> onDisconnectionSubscriber;
     private final PlayerCredentials handshakeCredentials;
 
-    private Integer port = 56677;
+    private Integer port;
+    private String ipAddress;
     private ConnectionInterface connectionInterface;
     private final NetworkInternalEventBus internalNetworkEventBus;
     private NetworkExternalEventBus externalNetworkEventBus;
 
     private final DefaultEventBus lobbyEventBus;
 
-    public GuestLobby(PlayerCredentials playerCredentials) {
-        this(playerCredentials, null);
-    }
-
-    public GuestLobby(PlayerCredentials playerCredentials, Integer customPort) {
-        if (customPort != null) {
-            port = customPort;
-        }
+    public GuestLobby(PlayerCredentials playerCredentials, String ipAddress, Integer port) {
+        this.port = port;
+        this.ipAddress = ipAddress;
 
         handshakeCredentials = playerCredentials;
         internalNetworkEventBus = new NetworkInternalEventBus();
@@ -42,11 +41,11 @@ public class GuestLobby extends Freezable implements Lobby {
     @Override
     public void prepare() {
         try {
-            connectionInterface = ConnectionInterface.initAsClient("127.0.0.1", port, internalNetworkEventBus);
             ConfigService.getInstance().log("Establishing connection...");
+            connectionInterface = ConnectionInterface.initAsClient(ipAddress, port, internalNetworkEventBus);
         }
         catch (Exception e) {
-            // Could not connect to the server
+            lobbyEventBus.emit(new ExceptionThrown(e));
         }
 
         externalNetworkEventBus = new NetworkExternalEventBus(connectionInterface);
@@ -82,6 +81,14 @@ public class GuestLobby extends Freezable implements Lobby {
         internalNetworkEventBus.clear();
     }
 
+    public NetworkActivityHandler createNetworkActivityHandler() {
+        return new NetworkActivityHandler(internalNetworkEventBus);
+    }
+
+    public NetworkPlayerPrompterHandler createNetworkPlayerPrompterHandler() {
+        return new NetworkPlayerPrompterHandler(internalNetworkEventBus, externalNetworkEventBus);
+    }
+
     public void toggleIsReady() {
         externalNetworkEventBus.emit(new ReadinessToggled());
     }
@@ -94,6 +101,10 @@ public class GuestLobby extends Freezable implements Lobby {
         else if (event.getEvent() instanceof SettingsUpdated) {
             ConfigService.getInstance().log("Received updated lobby settings");
             lobbyEventBus.emit(new SettingsUpdated((GameSettings) event.getEvent().getEventData()));
+        }
+        else if (event.getEvent() instanceof GameStarted) {
+            ConfigService.getInstance().log("Host started the game");
+            lobbyEventBus.emit(event.getEvent());
         }
     }
 

@@ -3,7 +3,114 @@
  */
 package swiftcards.core;
 
+import swiftcards.core.game.GameController;
+import swiftcards.core.player.AIPlayer;
+import swiftcards.core.player.Player;
+
+import java.io.Serializable;
+
 public class Library {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+
+
+
+//        if (args[0].equals("s")) {
+//            System.out.println("--- SERVER ---");
+//            ConnectionInterface.initAsServer(55667);
+//
+//            MainMenu s = new MainMenu();
+//            s.goToStage(new CLI(), null);
+//
+//            GameSettings gs = new GameSettings();
+//            HostLobby hl = HostLobby.createLan(gs, ConsolePlayerPrompter.class);
+//
+//            NetworkInternalEventBus.getInstance().on(PlayerJoined.class, new Subscriber<>((p) -> {
+//                try {
+//                    System.out.println("Starting game ...");
+//                    hl.getGameController().addPlayer(new AIPlayer().apply(2));
+//                    hl.getGameController().startGame();
+//                }
+//                catch (Exception e) {
+//                    System.out.println("Cannot start the game: " + e);
+//
+//                    if (e instanceof ClassCastException) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }));
+//
+//            hl.prepare();
+//        }
+//        else {
+//            System.out.println("--- CLIENT ---");
+//            ConnectionInterface.initAsClient("127.0.0.1", 55667);
+//
+//            PlayerCredentials c = new PlayerCredentials("Jaca");
+//
+//            NetworkActivityHandler nah = new NetworkActivityHandler();
+//            NetworkPlayerPrompterHandler npph = new NetworkPlayerPrompterHandler();
+//
+//            TextService.getInstance();
+//            System.out.print(TextService.getInstance().getGeneralText("mainmenu-logo"));
+//
+//            ConnectionInterface.getInstance().sendToAll(c);
+//        }
+
+        // ZROBIC KOLEJKE WYSYLANIA
+        //runCommunicator(args);
+
+    }
+
+    private static void runCommunicator(String args[]) throws Exception {
+//        NetworkInternalEventBus.getInstance().on(DataReceived.class, new Subscriber<>((obj, subscriber) -> {
+//            ChannelIncomingData c = (ChannelIncomingData) obj;
+//            Test t = (Test) c.getData();
+//            System.out.println(t.test);
+//            //NetworkInternalEventBus.getInstance().unsubscribe(DataReceived.class, subscriber);
+//        }));
+//
+//        if (args[0].equals("s")) {
+//            System.out.println("Server path");
+//            ConnectionInterface.initAsServer(4909);
+//
+//            ConnectionInterface.getInstance().runListener();
+//            while (true) {
+//                Test t = new Test(new Scanner(System.in).nextLine());
+//                for (int i = 0; i < 10; i++) {
+//                    ConnectionInterface.getInstance().sendToAll(t);
+//                }
+//
+//            }
+//
+//        }
+//        else if(args[0].equals("c")) {
+//            System.out.println("Client path");
+//            ConnectionInterface.initAsClient("127.0.0.1", 4909);
+//
+//            while (true) {
+//                Test s = new Test(new Scanner(System.in).nextLine());
+//                ConnectionInterface.getInstance().sendToAll( s );
+//            }
+//        }
+    }
+
+    private static void runGame() throws Exception {
+        Player player1 = new AIPlayer().apply(0);
+//        Player player2 = new HumanPlayer(ConsolePlayerPrompter.class).apply(1);
+
+
+
+        GameController gc = new GameController(false, 0, null);
+        gc.addPlayer(player1);
+//        gc.addPlayer(player2);
+
+        gc.startGame();
+    }
+
+    private static class Test implements Serializable {
+        public String test;
+        public Test (String t) {
+            test = t;
+        }
     }
 }

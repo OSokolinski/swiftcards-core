@@ -1,17 +1,17 @@
 package swiftcards.core.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import swiftcards.core.card.*;
 import swiftcards.core.card.GeneralCardPool.UnableToGenerateCardPoolException;
 import swiftcards.core.game.activities.CardSetOnTable;
 import swiftcards.core.game.activities.CardsToTakeIncreased;
+import swiftcards.core.game.activities.GameFinished;
 import swiftcards.core.game.activities.GameQueueSequenceReverted;
 import swiftcards.core.player.Player;
 import swiftcards.core.player.activities.*;
+import swiftcards.core.util.ConfigService;
 
 public class GameController {
 
@@ -21,24 +21,20 @@ public class GameController {
     private ActivityPropagator activityPropagator;
     private int turnCounter = 0;
 
-    private final int initialCardCount = 7;
     private int turnLimit = -1;
     private boolean keepLogging;
-    private int sleepBetweenTurns;
 
     public GameController(ActivityPropagator propagator) {
 
         players = new ArrayList<>();
         mainCardPool = null;
         keepLogging = false;
-        sleepBetweenTurns = 0;
         activityPropagator = propagator;
     }
 
     public GameController(boolean enableLogging, int sleep, ActivityPropagator propagator) {
         this(propagator);
         keepLogging = enableLogging;
-        sleepBetweenTurns = sleep;
     }
 
     public void addPlayer(Player player) {
@@ -95,15 +91,17 @@ public class GameController {
 
         Card cardOnTable = mainCardPool.pullNext();
         boolean isGamePending = playerIterator.getPlayersInGameCount() > 1;
+        Summary summary = new Summary();
 
         while (isGamePending) {
-
             // **** Breaking game, when conditions are filled ****
 
             isGamePending = playerIterator.getPlayersInGameCount() > 1
                 && (turnLimit == -1 || turnLimit > turnCounter);
 
             if (!isGamePending) {
+                summary.addLastPlayer(playerIterator.getPlayer());
+                activityPropagator.propagate(new GameFinished(summary));
                 break;
             }
 
@@ -166,7 +164,7 @@ public class GameController {
                     if (cardOnTable instanceof PenaltyPullingCard) {
                         int cardToPullAmount = ((PenaltyPullingCard) cardOnTable).getCardToPullAmount();
                         player.pullPenaltyCards(mainCardPool, cardToPullAmount);
-                        activityPropagator.propagate(new CardsPulledFromPool(cardToPullAmount));
+                        activityPropagator.propagate(new CardsPulledFromPool(cardToPullAmount, player.getId()));
                     }
 
                     // Deactivating previous functional card
@@ -174,11 +172,11 @@ public class GameController {
                 }
             }
 
+            activityPropagator.propagate(new PlayerStatusUpdated(player.getId(), player.getCardPool().getCards().size(), player.hasFinishedPlay()));
             turnCounter++;
 
-            if (sleepBetweenTurns != 0) {
-                TimeUnit.MILLISECONDS.sleep(sleepBetweenTurns);
-            }
+            summary.setTurnCount(turnCounter);
+            summary.updatePlayerSummary(player);
         }
     }
 
@@ -186,14 +184,12 @@ public class GameController {
      * Supplies player with starting cards
      */
     private void supplyPlayerCards() {
+        int initialCardCount = ConfigService.getInstance().getInitialPlayerCardAmount();
 
         for (Player player : players) {
-
             for (int i = 0; i < initialCardCount; i++) {
-
                 player.getCardPool().getCards().add(mainCardPool.pullNext());
             }
-
         }
     }
 

@@ -3,39 +3,38 @@ package swiftcards.core.player;
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
 import swiftcards.core.card.GeneralCardPool;
-import swiftcards.core.card.PlayerCardPool;
+import swiftcards.core.util.ConfigService;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class HumanPlayer extends PlayerBase implements Player {
 
-    private final PlayerPrompter prompter;
-    protected String displayName = "Me";
-
-    public HumanPlayer(Class<? extends PlayerPrompter> playerPrompterClass) throws Exception {
+    public HumanPlayer() throws Exception {
         super();
-        prompter = playerPrompterClass.getConstructor().newInstance();
+        displayName = ConfigService.getInstance().getPlayerName();
     }
 
     @Override
     public Card layCard(Card cardOnTable) {
 
-        prompter.showCardOnTable(cardOnTable);
+        getPrompter().showCardOnTable(cardOnTable);
 
         List<Integer> eligibleCardIds = playerCardPool.pullMatchingCards(cardOnTable)
             .stream()
             .map(Card::getId)
             .collect(Collectors.toList());
 
-        prompter.refreshCards(playerCardPool.getCards());
-        prompter.showPlayerCards(eligibleCardIds);
+        getPrompter().refreshCards(playerCardPool.getCards());
+        getPrompter().showPlayerCards(eligibleCardIds);
 
-        Card chosenCard = prompter.selectCard();
+        Card chosenCard = getPrompter().selectCard();
 
         if (chosenCard != null) {
             playerCardPool.removeCardFromPool(chosenCard);
         }
+
+        getPrompter().refreshCards(playerCardPool.getCards());
 
         return chosenCard;
     }
@@ -48,6 +47,16 @@ public class HumanPlayer extends PlayerBase implements Player {
 
     @Override
     public CardColor choosePoolColor() {
-        return prompter.selectCardColor();
+        return getPrompter().selectCardColor();
+    }
+
+    @Override
+    public void pullPenaltyCards(GeneralCardPool cardPool, int amount) {
+        super.pullPenaltyCards(cardPool, amount);
+        getPrompter().refreshCards(playerCardPool.getCards());
+    }
+
+    private PlayerPrompter getPrompter() {
+        return ConfigService.getInstance().getPlayerPrompter();
     }
 }

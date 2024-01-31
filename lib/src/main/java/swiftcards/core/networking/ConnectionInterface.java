@@ -1,10 +1,9 @@
 package swiftcards.core.networking;
 
 import swiftcards.core.networking.event.ChannelDisconnected;
+import swiftcards.core.networking.event.ExceptionThrown;
 import swiftcards.core.networking.event.SocketAccepted;
-import swiftcards.core.util.ApplicationSettings;
 import swiftcards.core.util.ConfigService;
-import swiftcards.core.util.Logger;
 import swiftcards.core.util.Subscriber;
 
 import java.io.IOException;
@@ -16,6 +15,7 @@ public class ConnectionInterface {
 
     private final List<ConnectionChannel> connections;
     private final ConnectionListeningRunnable listeningRunnable;
+    private Thread listenerThread = null;
     private final boolean clientMode;
 
     private final NetworkInternalEventBus networkInternalEventBus;
@@ -29,7 +29,7 @@ public class ConnectionInterface {
         this.networkInternalEventBus.on(ChannelDisconnected.class, new Subscriber<>(connections::remove));
     }
 
-    public static ConnectionInterface initAsClient(String address, int port, NetworkInternalEventBus networkInternalEventBus) throws IOException {
+    public static ConnectionInterface initAsClient(String address, int port, NetworkInternalEventBus networkInternalEventBus) throws Exception {
         ConnectionInterface instance = new ConnectionInterface(true, port, networkInternalEventBus);
 
         ConnectionChannel channel = ConnectionChannel.connect(address, port, networkInternalEventBus);
@@ -54,17 +54,23 @@ public class ConnectionInterface {
                     synchronized (connections) {
                         connections.add(ConnectionChannel.accept(s, connections.size(), networkInternalEventBus));
                     }
-
                 }
                 catch (IOException e) {
                     ConfigService.getInstance().logError("Network Socket Error. Could not accept client connection: %s", e);
+                    networkInternalEventBus.emit(new ExceptionThrown(e));
                 }
 
                 ConfigService.getInstance().log("Client successfully connected");
             }
         ));
 
-        new Thread(listeningRunnable).start();
+        listenerThread = new Thread(listeningRunnable);
+        listenerThread.start();
+    }
+
+    public void stopListener() {
+        listeningRunnable.stopWaitingForConnections();
+        listenerThread.interrupt();
     }
 
 
@@ -98,12 +104,6 @@ public class ConnectionInterface {
             connections.remove(connectionId);
         }
 
-    }
-
-    public static class ConnectionNotConfiguredException extends Exception {
-        public ConnectionNotConfiguredException() {
-            super("Connection mode has not been specified.");
-        }
     }
 
     public static class ConnectionListenerNotAllowedException extends Exception {

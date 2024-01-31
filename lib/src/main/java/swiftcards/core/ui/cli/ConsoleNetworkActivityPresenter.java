@@ -2,9 +2,11 @@ package swiftcards.core.ui.cli;
 
 import swiftcards.core.card.Card;
 import swiftcards.core.card.CardColor;
-import swiftcards.core.networking.NetworkActivityPresenter;
+import swiftcards.core.game.Summary;
+import swiftcards.core.networking.ActivityPresenter;
+import swiftcards.core.player.activities.PlayerStatusUpdated;
 
-public class ConsoleNetworkActivityPresenter implements NetworkActivityPresenter {
+public class ConsoleNetworkActivityPresenter implements ActivityPresenter {
 
     int currentPlayerId = -1;
 
@@ -19,7 +21,7 @@ public class ConsoleNetworkActivityPresenter implements NetworkActivityPresenter
     }
 
     @Override
-    public void cardsPulledByPlayer(int cardAmount) {
+    public void cardsPulledByPlayer(int cardAmount, int playerId) {
         System.out.printf("Cards pulled by player: %d%n", cardAmount);
     }
 
@@ -29,7 +31,7 @@ public class ConsoleNetworkActivityPresenter implements NetworkActivityPresenter
     }
 
     @Override
-    public void playerTurdStarted(int playerId) {
+    public void playerTurnStarted(int playerId) {
         currentPlayerId = playerId;
         System.out.printf("Player %d makes turn%n", playerId);
     }
@@ -47,5 +49,15 @@ public class ConsoleNetworkActivityPresenter implements NetworkActivityPresenter
     @Override
     public void gameQueueSequenceReverted() {
         System.out.println("Game queue has been reverted");
+    }
+
+    @Override
+    public void playerStatusUpdated(PlayerStatusUpdated.PlayerStatusData playerData) {
+
+    }
+
+    @Override
+    public void gameFinished(Summary playerSummary) {
+
     }
 }

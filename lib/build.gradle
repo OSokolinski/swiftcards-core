@@ -21,6 +21,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'junit:junit:4.12'
+
 
     // Use JUnit test framework.
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'

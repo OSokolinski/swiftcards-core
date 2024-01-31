@@ -2,6 +2,8 @@ package swiftcards.core.game.lobby;
 
 import swiftcards.core.game.ActivityPropagator;
 import swiftcards.core.game.GameController;
+import swiftcards.core.networking.event.ExceptionThrown;
+import swiftcards.core.networking.event.lobby.GameStarted;
 import swiftcards.core.networking.*;
 import swiftcards.core.networking.event.ChannelDisconnected;
 import swiftcards.core.networking.event.IncomingEvent;
@@ -37,11 +39,7 @@ public class HostLobby extends Freezable implements Lobby {
 
     private final DefaultEventBus lobbyEventBus;
 
-    public HostLobby(LobbyType type, Integer customPort) {
-        int port = 56677;
-        if (customPort != null) {
-            port = customPort;
-        }
+    public HostLobby(LobbyType type, Integer port) {
         boolean uiEnabled = type != LobbyType.ONLINE;
 
         arePlayersReady = false;
@@ -57,6 +55,7 @@ public class HostLobby extends Freezable implements Lobby {
             onClientDisconnected = new Subscriber<>(this::handleChannelDisconnection);
             internalNetworkEventBus.on(ExternalEventEmitted.class, onIncomingEventSubscriber);
             internalNetworkEventBus.on(ChannelDisconnected.class, onClientDisconnected);
+            internalNetworkEventBus.on(ExceptionThrown.class, new Subscriber<>(this::emitLobbyException));
             connectionInterface = ConnectionInterface.initAsServer(port, internalNetworkEventBus);
             externalNetworkEventBus = new NetworkExternalEventBus(connectionInterface);
             gameController = new GameController(new ActivityPropagator(uiEnabled, connectionInterface));
@@ -69,8 +68,10 @@ public class HostLobby extends Freezable implements Lobby {
 
         if (uiEnabled) {
             try {
-                gameController.addPlayer(new HumanPlayer(ConfigService.getInstance().getPlayerPrompterClass()));
-                gameSettings.players.set(0, new PlayerSlot(PlayerSlot.PlayerSlotStatus.HUMAN));
+                Player humanPlayer = new HumanPlayer();
+
+                gameSettings.setPlayerOnSlot(gameSettings.players.get(0), humanPlayer);
+                gameController.applyPlayer(humanPlayer);
             }
             catch (Exception e) {
                 ConfigService.getInstance().throwAndExit("Unable to create host lobby: %s", e);
@@ -80,20 +81,20 @@ public class HostLobby extends Freezable implements Lobby {
         ConfigService.getInstance().log("Host lobby initialized successfully");
     }
 
-    public HostLobby(LobbyType type) {
-        this(type, null);
-    }
-
     @Override
     public void prepare() {
-        try {
-            connectionInterface.runListener();
+        if (lobbyType == LobbyType.OFFLINE) {
+            updateSettings(gameSettings);
         }
-        catch (Exception e) {
-            System.out.println("Listening error: " + e);
+        else {
+            try {
+                connectionInterface.runListener();
+            }
+            catch (Exception e) {
+                lobbyEventBus.emit(new ExceptionThrown(e));
+            }
         }
-        lobbyEventBus.emit(new LobbyPrepared());
-
+        lobbyEventBus.emit(new LobbyPrepared(gameSettings));
     }
 
     @Override
@@ -103,16 +104,28 @@ public class HostLobby extends Freezable implements Lobby {
 
     @Override
     public void close() {
+        if (lobbyType == LobbyType.OFFLINE) return;
         internalNetworkEventBus.unsubscribe(ExternalEventEmitted.class, onIncomingEventSubscriber);
         internalNetworkEventBus.unsubscribe(ChannelDisconnected.class, onClientDisconnected);
     }
 
     @Override
     public void disconnect() {
+        if (lobbyType == LobbyType.OFFLINE) return;
+
         close();
         for (int i = 0; i < connectionInterface.getConnections().size(); i++) {
             connectionInterface.disconnect(i);
         }
+        connectionInterface.stopListener();
+    }
+
+    public GameController prepareForStart() {
+        broadcastEvent(new GameStarted());
+        if (lobbyType != LobbyType.OFFLINE) {
+            connectionInterface.stopListener();
+        }
+        return gameController;
     }
 
     @Override
@@ -199,6 +212,7 @@ public class HostLobby extends Freezable implements Lobby {
     private void addAIPlayersToGameController() {
         for (PlayerSlot slot : gameSettings.getNotAppliedAIPlayerSlots()) {
             AIPlayer player = (AIPlayer) gameController.applyPlayer(new AIPlayer());
+            player.setDisplayName("AI Player " + player.getId());
             gameSettings.setPlayerOnSlot(slot, player);
         }
     }
@@ -207,5 +221,9 @@ public class HostLobby extends Freezable implements Lobby {
         if (lobbyType != LobbyType.OFFLINE) {
             externalNetworkEventBus.emit(event);
         }
+    }
+
+    private void emitLobbyException(Exception e) {
+        lobbyEventBus.emit(new ExceptionThrown(e));
     }
 }

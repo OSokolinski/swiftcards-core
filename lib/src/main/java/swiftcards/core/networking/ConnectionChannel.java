@@ -42,7 +42,7 @@ public class ConnectionChannel {
         return connectionChannel;
     }
 
-    public static ConnectionChannel connect(String ipAddress, int port, NetworkInternalEventBus networkInternalEventBus) throws IOException {
+    public static ConnectionChannel connect(String ipAddress, int port, NetworkInternalEventBus networkInternalEventBus) throws Exception {
         ConnectionChannel connectionChannel = new ConnectionChannel(new Socket(ipAddress, port), networkInternalEventBus);
         connectionChannel.runConnectionThreads();
 

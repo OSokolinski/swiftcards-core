@@ -1,7 +1,5 @@
 package swiftcards.core.util;
 
-import java.util.function.BiConsumer;
-
 public class Subscriber<T> {
 
     private final ConsumerBase<T> subscriberConsumer;

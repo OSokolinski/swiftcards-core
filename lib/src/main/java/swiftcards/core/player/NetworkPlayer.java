@@ -39,6 +39,8 @@ public class NetworkPlayer extends PlayerBase implements Player {
             playerCardPool.removeCardFromPool(chosenCard);
         }
 
+        prompter.refreshCards(playerCardPool.getCards());
+
         return chosenCard;
     }
 
@@ -50,6 +52,12 @@ public class NetworkPlayer extends PlayerBase implements Player {
     @Override
     public CardColor choosePoolColor() {
         return prompter.selectCardColor();
+    }
+
+    @Override
+    public void pullPenaltyCards(GeneralCardPool cardPool, int amount) {
+        super.pullPenaltyCards(cardPool, amount);
+        prompter.refreshCards(playerCardPool.getCards());
     }
 
     public int getConnectionId() {
